@@ -1,5 +1,3 @@
-extern crate mini_gl_fb;
-
 use std::time::Duration;
 use std::time::Instant;
 
@@ -14,7 +12,9 @@ use mini_gl_fb::glutin::WindowedContext;
 use mini_gl_fb::BufferFormat;
 use mini_gl_fb::MiniGlFb;
 
-use opencv::{core::Mat, prelude::*, videoio};
+use opencv::{core::Mat, prelude::*};
+
+mod camera;
 
 fn main() {
     let mut event_loop = EventLoop::new();
@@ -22,6 +22,8 @@ fn main() {
     let window_title = String::from("Hello world!");
     let window_size = LogicalSize::new(1280.0, 960.0);
     let buffer_size = LogicalSize::new(640, 480);
+
+    let mut cam = camera::Camera::init(1);
 
     let window = WindowBuilder::new()
         .with_decorations(false)
@@ -73,32 +75,23 @@ fn main() {
 
     let mut update_id: Option<u32> = None;
 
-    #[cfg(ocvrs_opencv_branch_32)]
-    let mut cam = videoio::VideoCapture::new_default(0)?; // 0 is the default camera
-    #[cfg(not(ocvrs_opencv_branch_32))]
-    let mut cam = videoio::VideoCapture::new(1, videoio::CAP_ANY).unwrap(); // 0 is the default camera
-    let opened = videoio::VideoCapture::is_opened(&cam).unwrap();
-    if !opened {
-        panic!("Unable to open default camera!");
-    }
-
     fb.glutin_handle_basic_input(&mut event_loop, |fb, input| {
         input.wait = true;
         if update_id.is_none() {
             update_id = Some(input.schedule_wakeup(Instant::now() + Duration::from_millis(10)))
         } else if let Some(mut wakeup) = input.wakeup {
             if Some(wakeup.id) == update_id {
-                let mut frame = Mat::default();
-                if let Ok(true) = cam.read(&mut frame) {
-                    unsafe {
-                        match Mat::data_typed_unchecked::<u8>(&frame.reshape(1, 1).unwrap()) {
-                            Ok(data) => {
-                                fb.update_buffer(&data);
-                            }
-                            Err(why) => panic!("{}", why),
+                let mut frame= Mat::default();
+                cam.read(&mut frame);
+                unsafe {
+                    match Mat::data_typed_unchecked::<u8>(&frame.reshape(1, 1).unwrap()) {
+                        Ok(data) => {
+                            fb.update_buffer(&data);
                         }
+                        Err(why) => panic!("{}", why),
                     }
                 }
+
                 wakeup.when = Instant::now() + Duration::from_millis(5);
                 input.reschedule_wakeup(wakeup);
             }
