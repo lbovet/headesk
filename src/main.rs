@@ -1,3 +1,4 @@
+use std::process;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -12,15 +13,13 @@ use mini_gl_fb::glutin::WindowedContext;
 use mini_gl_fb::BufferFormat;
 use mini_gl_fb::MiniGlFb;
 
-use opencv::{core::Mat, prelude::*};
-
 mod camera;
 
 fn main() {
     let mut event_loop = EventLoop::new();
 
     let window_title = String::from("Hello world!");
-    let window_size = LogicalSize::new(1280.0, 960.0);
+    let window_size = LogicalSize::new(640, 480);
     let buffer_size = LogicalSize::new(640, 480);
 
     let mut cam = camera::Camera::init(1);
@@ -81,17 +80,9 @@ fn main() {
             update_id = Some(input.schedule_wakeup(Instant::now() + Duration::from_millis(10)))
         } else if let Some(mut wakeup) = input.wakeup {
             if Some(wakeup.id) == update_id {
-                let mut frame= Mat::default();
-                cam.read(&mut frame);
-                unsafe {
-                    match Mat::data_typed_unchecked::<u8>(&frame.reshape(1, 1).unwrap()) {
-                        Ok(data) => {
-                            fb.update_buffer(&data);
-                        }
-                        Err(why) => panic!("{}", why),
-                    }
-                }
-
+                cam.read(&mut |data| {
+                    fb.update_buffer(&data);
+                });
                 wakeup.when = Instant::now() + Duration::from_millis(5);
                 input.reschedule_wakeup(wakeup);
             }
@@ -99,7 +90,8 @@ fn main() {
         }
 
         if input.key_is_down(VirtualKeyCode::Escape) {
-            panic!("Bye")
+            cam.close();
+            process::exit(0);
         }
 
         true
