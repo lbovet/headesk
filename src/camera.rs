@@ -14,7 +14,7 @@ impl Camera {
         Camera { video: cam }
     }
 
-    pub fn read<F: FnMut(&[u8]) -> ()>(&mut self, mut func: F ) {
+    pub fn read<F: FnMut(&[u8]) -> ()>(&mut self, mut func: F) {
         let mut frame = Mat::default();
         match self.video.read(&mut frame) {
             Ok(true) => unsafe {
