@@ -1,6 +1,14 @@
-use mini_gl_fb::BasicInput;
+use std::cmp::max;
+use std::cmp::min;
+use std::process;
+use std::time::Duration;
+use std::time::Instant;
+
 use mini_gl_fb::core;
 use mini_gl_fb::glutin::dpi::LogicalSize;
+use mini_gl_fb::glutin::event::{Event, ElementState, WindowEvent};
+use mini_gl_fb::glutin::event::MouseButton;
+use mini_gl_fb::glutin::event::VirtualKeyCode;
 use mini_gl_fb::glutin::event_loop::EventLoop;
 use mini_gl_fb::glutin::window::WindowBuilder;
 use mini_gl_fb::glutin::ContextBuilder;
@@ -8,16 +16,20 @@ use mini_gl_fb::glutin::PossiblyCurrent;
 use mini_gl_fb::glutin::WindowedContext;
 use mini_gl_fb::BufferFormat;
 use mini_gl_fb::MiniGlFb;
-use mini_gl_fb::Framebuffer;
+use mini_gl_fb::GlutinBreakout;
+use mini_gl_fb::glutin::event::WindowEvent::KeyboardInput;
+use mini_gl_fb::glutin::event_loop::ControlFlow;
 
-pub fn create<F: FnMut(&mut Framebuffer, &mut BasicInput) -> bool>(handler: F) {
-    let mut event_loop = EventLoop::new();
+use crate::camera::Camera;
+
+pub fn create(mut camera: Camera) {
+    let event_loop = EventLoop::new();
 
     let window_title = String::from("Headesk");
     let window_size = LogicalSize::new(640, 480);
     let buffer_size = LogicalSize::new(640, 480);
 
-    let window = WindowBuilder::new()
+    let window_builder = WindowBuilder::new()
         .with_decorations(false)
         .with_always_on_top(true)
         .with_transparent(true)
@@ -27,7 +39,7 @@ pub fn create<F: FnMut(&mut Framebuffer, &mut BasicInput) -> bool>(handler: F) {
 
     let context: WindowedContext<PossiblyCurrent> = unsafe {
         ContextBuilder::new()
-            .build_windowed(window, &event_loop)
+            .build_windowed(window_builder, &event_loop)
             .unwrap()
             .make_current()
             .unwrap()
@@ -49,23 +61,54 @@ pub fn create<F: FnMut(&mut Framebuffer, &mut BasicInput) -> bool>(handler: F) {
         internal: core::Internal { context, fb },
     };
 
-    const FRAGMENT_SOURCE: &str = r"
-    #version 330 core
-
-    in vec2 v_uv;
-
-    out vec4 frag_color;
-
-    uniform sampler2D u_buffer;
-
-    void main() {
-        frag_color = vec4(texture(u_buffer, v_uv).rgb, 0.5);
-    }
-";
-    fb.internal.fb.use_fragment_shader(FRAGMENT_SOURCE);
+    fb.internal
+        .fb
+        .use_fragment_shader(include_str!("./fragment_shader.glsl"));
     fb.change_buffer_format::<u8>(BufferFormat::BGR);
 
-    fb.glutin_handle_basic_input(&mut event_loop, handler);
+    let GlutinBreakout {
+        context,
+        mut fb,
+    } = fb.glutin_breakout();
 
-    fb.persist(&mut event_loop);
+    let mut last_frame_instant = Instant::now();
+
+    event_loop.run(move |event, _, flow| {
+        if Instant::now() > last_frame_instant + Duration::from_millis(10) {
+            camera.read( |data| {
+                fb.update_buffer(data);
+                fb.redraw();
+                context.swap_buffers().unwrap();
+            });
+            last_frame_instant = Instant::now();
+        }
+        *flow = ControlFlow::WaitUntil(Instant::now()+Duration::from_millis(5));
+
+        match event {
+            Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
+                *flow = ControlFlow::Exit;
+            }
+            Event::WindowEvent { event: KeyboardInput { input, .. }, .. } => {
+                if let Some(k) = input.virtual_keycode {
+                    if k == VirtualKeyCode::Escape && input.state == ElementState::Pressed {
+                        *flow = ControlFlow::Exit;
+                    }
+                }
+            }
+            Event::WindowEvent { event: WindowEvent::Resized(size), .. } => {
+                context.resize(size);
+                context.window().request_redraw();
+            }
+            Event::WindowEvent { event: WindowEvent::MouseInput { state, .. }, .. } => {
+                if state == ElementState::Pressed {
+                    context.window().drag_window().unwrap();
+                }
+            }
+            Event::RedrawRequested(_) => {
+                fb.redraw();
+                context.swap_buffers().unwrap();
+            }
+            _ => {}
+        }
+    });
 }
