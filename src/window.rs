@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -15,6 +16,7 @@ use mini_gl_fb::glutin::WindowedContext;
 use mini_gl_fb::BufferFormat;
 use mini_gl_fb::GlutinBreakout;
 use mini_gl_fb::MiniGlFb;
+use winit::dpi::PhysicalPosition;
 use winit::dpi::PhysicalSize;
 use winit::event::MouseScrollDelta;
 
@@ -69,9 +71,13 @@ pub fn create(mut camera: Camera) {
     let GlutinBreakout { context, mut fb } = fb.glutin_breakout();
 
     let mut last_frame_instant = Instant::now();
+    let mut last_mouse_wheel = Instant::now();
+
+    let mut current_window_size = context.window().inner_size();
 
     event_loop.run(move |event, _, flow| {
         let mut redraw = false;
+        let window = context.window();
 
         if Instant::now() > last_frame_instant + Duration::from_millis(10) {
             camera.read(|data| {
@@ -105,40 +111,57 @@ pub fn create(mut camera: Camera) {
                 event: WindowEvent::Resized(size),
                 ..
             } => {
+                let position = window.outer_position().unwrap();
+                window.set_outer_position(PhysicalPosition::new(
+                    position.x + (current_window_size.width as i32 - size.width as i32) / 2,
+                    position.y + (current_window_size.height as i32 - size.height as i32),
+                ));
+                current_window_size = size;
                 context.resize(size);
                 fb.resize_viewport(size.width, size.height);
-                context.window().request_redraw();
+                window.request_redraw();
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseInput { state, .. },
                 ..
             } => {
                 if state == ElementState::Pressed {
-                    context.window().drag_window().unwrap();
+                    window.drag_window().unwrap();
                 }
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta, .. },
                 ..
             } => {
-                let current_size = context.window().inner_size();
-                if current_size.width > 200 {
-                    let h_step = 15;
-                    let w_step = 20;
+                if Instant::now() > last_mouse_wheel + Duration::from_millis(25) {
+                    let current_size = window.inner_size();
+                    let elapsed = ((Instant::now() - last_mouse_wheel).as_millis() - 20) as u32;
+                    let accel = 3 - min(2, elapsed / 20);
+                    let h_step = 15 * accel;
+                    let w_step = 20 * accel;
                     if match delta {
                         MouseScrollDelta::LineDelta(_, y) => y > 0.0,
                         MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
                     } {
-                        context.window().set_inner_size(PhysicalSize::new(
-                            current_size.width + w_step,
-                            current_size.height + h_step,
-                        ));
+                        if current_size.width < 2000 {
+                            window.set_inner_size(PhysicalSize::new(
+                                current_size.width + w_step,
+                                current_size.height + h_step,
+                            ));
+                        }
                     } else {
-                        context.window().set_inner_size(PhysicalSize::new(
-                            current_size.width - w_step,
-                            current_size.height - h_step,
-                        ));
+                        let visible_y =
+                            window.current_monitor().unwrap().size().height as i32 - 200;
+                        if current_size.width > 200
+                            && window.outer_position().unwrap().y < visible_y
+                        {
+                            window.set_inner_size(PhysicalSize::new(
+                                current_size.width - w_step,
+                                current_size.height - h_step,
+                            ));
+                        }
                     };
+                    last_mouse_wheel = Instant::now();
                 }
             }
             Event::RedrawRequested(_) => {
