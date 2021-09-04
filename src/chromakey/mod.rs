@@ -1,9 +1,12 @@
 use std::time::{Duration, Instant};
 
-use color::{rgb, Rgb};
+use color::{rgb, Hsv, Rgb, ToHsv};
 use mini_gl_fb::Framebuffer;
 
 extern crate gl;
+
+const WHITE: Rgb<u8> = rgb!(255, 255, 255);
+const BLACK: Rgb<u8> = rgb!(0, 0, 0);
 
 pub struct ChromaKey {
     key: Rgb,
@@ -27,8 +30,8 @@ pub fn new(fb: &mut Framebuffer) -> ChromaKey {
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
         ChromaKey {
-            key: rgb!(255, 255, 255), // deactivated
-            calibration_key: rgb!(0, 0, 0),
+            key: WHITE, // deactivated
+            calibration_key: BLACK,
             last_calibration_time: Instant::now() - Duration::from_millis(2000),
             program: fb.internal.program,
             key_rgba_loc: gl::GetUniformLocation(
@@ -53,14 +56,18 @@ impl ChromaKey {
                 rgb!(data[p - 1], data[p - 2], data[p - 3]),
                 self.calibration_key,
             ];
-            if self.calibration_key == rgb!(255, 255, 255) {
-                self.set_key(samples[0]);
-            }
 
-            if let Some(color) = compute_key(&samples) {
-                self.set_key(color);
+            if samples[0] == BLACK && samples[1] == BLACK {
+                self.set_key(BLACK);
+            } else if let Some(color) = compute_key(&samples) {
+                let hsv: Hsv<f32> = rgb!(color.r as f32, color.g as f32, color.b as f32).to_hsv();
+                if hsv.s > 0.1 && hsv.v > 50.0 {
+                    self.set_key(color);
+                    self.calibration_key = color;
+                }
             } else {
                 self.calibration_key = samples[0];
+                self.set_key(WHITE);
             }
             self.last_calibration_time = Instant::now()
         }
@@ -68,7 +75,7 @@ impl ChromaKey {
         fn compute_key(samples: &[Rgb]) -> Option<Rgb> {
             let mut result = samples[0];
             for i in 1..samples.len() {
-                if similar(result, samples[i], 6.0) {
+                if similar(result, samples[i], 7.0) {
                     result = mix(result, samples[i]);
                 } else {
                     return None;
@@ -111,7 +118,6 @@ impl ChromaKey {
             let (cb, cr) = rgb_to_cc(r, g, b);
             gl::ProgramUniform2f(self.program, self.key_cc_loc, cb, cr);
         }
-        self.calibration_key = color;
     }
 }
 
