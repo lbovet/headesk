@@ -677,7 +677,6 @@ dependencies = [
  "image",
  "mini_gl_fb",
  "opencv",
- "winit",
 ]
 
 [[package]]
