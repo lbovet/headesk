@@ -1,9 +1,8 @@
 use std::time::{Duration, Instant};
 
 use color::{rgb, Hsv, Rgb, ToHsv};
+use mini_gl_fb::gl;
 use mini_gl_fb::Framebuffer;
-
-extern crate gl;
 
 const WHITE: Rgb<u8> = rgb!(255, 255, 255);
 const BLACK: Rgb<u8> = rgb!(0, 0, 0);

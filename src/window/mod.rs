@@ -3,6 +3,7 @@ use std::time::Duration;
 use std::time::Instant;
 
 use mini_gl_fb::core;
+use mini_gl_fb::gl;
 use mini_gl_fb::glutin::dpi::LogicalSize;
 use mini_gl_fb::glutin::event::ModifiersState;
 use mini_gl_fb::glutin::event::VirtualKeyCode;

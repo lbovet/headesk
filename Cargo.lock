@@ -673,7 +673,6 @@ name = "headesk"
 version = "0.1.0"
 dependencies = [
  "color-rs",
- "gl",
  "image",
  "mini_gl_fb",
  "opencv",
