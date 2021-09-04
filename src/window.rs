@@ -18,12 +18,13 @@ use mini_gl_fb::GlutinBreakout;
 use mini_gl_fb::MiniGlFb;
 use winit::dpi::PhysicalPosition;
 use winit::dpi::PhysicalSize;
+use winit::event::MouseButton;
 use winit::event::MouseScrollDelta;
 
-use crate::camera::Camera;
+use crate::camera::CameraSwitcher;
 use crate::chromakey;
 
-pub fn create(mut camera: Camera) {
+pub fn create(mut camera_switcher: CameraSwitcher) {
     let event_loop = EventLoop::new();
 
     let window_title = String::from("Headesk");
@@ -77,12 +78,14 @@ pub fn create(mut camera: Camera) {
 
     let started = Instant::now();
 
+    let right_button_pressed = false;
+
     event_loop.run(move |event, _, flow| {
         let mut redraw = false;
         let window = context.window();
 
         if Instant::now() > last_frame_instant + Duration::from_millis(10) {
-            camera.read(|data| {
+            camera_switcher.read(|data| {
                 chromakey.calibrate(data, buffer_size.width);
                 fb.update_buffer(data);
                 redraw = true;
@@ -96,7 +99,7 @@ pub fn create(mut camera: Camera) {
                 event: WindowEvent::CloseRequested,
                 ..
             } => {
-                camera.close();
+                camera_switcher.close();
                 *flow = ControlFlow::Exit;
             }
             Event::WindowEvent {
@@ -105,7 +108,7 @@ pub fn create(mut camera: Camera) {
             } => {
                 if let Some(k) = input.virtual_keycode {
                     if k == VirtualKeyCode::Escape && input.state == ElementState::Pressed {
-                        camera.close();
+                        camera_switcher.close();
                         *flow = ControlFlow::Exit;
                     }
                 }
@@ -125,11 +128,14 @@ pub fn create(mut camera: Camera) {
                 window.request_redraw();
             }
             Event::WindowEvent {
-                event: WindowEvent::MouseInput { state, .. },
+                event: WindowEvent::MouseInput { state, button, .. },
                 ..
             } => {
-                if state == ElementState::Pressed {
+                if button == MouseButton::Left && state == ElementState::Pressed {
                     window.drag_window().unwrap();
+                }
+                if button == MouseButton::Right && state == ElementState::Released {
+                    camera_switcher.next();
                 }
             }
             Event::WindowEvent {

@@ -1,9 +1,9 @@
 mod camera;
-mod window;
 mod chromakey;
+mod window;
 
-use camera::Camera;
+use camera::CameraSwitcher;
 
 fn main() {
-    window::create(Camera::init(0));
+    window::create(CameraSwitcher::new(0));
 }
