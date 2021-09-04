@@ -6,21 +6,22 @@ use mini_gl_fb::core;
 use mini_gl_fb::glutin::dpi::LogicalSize;
 use mini_gl_fb::glutin::event::ModifiersState;
 use mini_gl_fb::glutin::event::VirtualKeyCode;
+use mini_gl_fb::glutin::event::MouseButton;
+use mini_gl_fb::glutin::event::MouseScrollDelta;
 use mini_gl_fb::glutin::event::WindowEvent::KeyboardInput;
 use mini_gl_fb::glutin::event::{ElementState, Event, WindowEvent};
 use mini_gl_fb::glutin::event_loop::ControlFlow;
 use mini_gl_fb::glutin::event_loop::EventLoop;
 use mini_gl_fb::glutin::window::WindowBuilder;
+use mini_gl_fb::glutin::window::Icon;
+use mini_gl_fb::glutin::dpi::PhysicalPosition;
+use mini_gl_fb::glutin::dpi::PhysicalSize;
 use mini_gl_fb::glutin::ContextBuilder;
 use mini_gl_fb::glutin::PossiblyCurrent;
 use mini_gl_fb::glutin::WindowedContext;
 use mini_gl_fb::BufferFormat;
 use mini_gl_fb::GlutinBreakout;
 use mini_gl_fb::MiniGlFb;
-use winit::dpi::PhysicalPosition;
-use winit::dpi::PhysicalSize;
-use winit::event::MouseButton;
-use winit::event::MouseScrollDelta;
 
 use crate::camera::CameraSwitcher;
 use crate::chromakey;
@@ -32,6 +33,10 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
     let window_size = LogicalSize::new(640, 480);
     let buffer_size = LogicalSize::new(640, 480);
 
+    let icon_png = include_bytes!("../../images/small-icon-48.png");
+    let image = image::load_from_memory(icon_png);
+    let image_bytes = image.unwrap().as_rgba8().unwrap().as_raw().to_vec();
+
     let window_builder = WindowBuilder::new()
         .with_decorations(false)
         .with_always_on_top(true)
@@ -39,7 +44,8 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
         .with_title(window_title.to_string())
         .with_inner_size(window_size)
         .with_visible(false)
-        .with_resizable(true);
+        .with_resizable(true)
+        .with_window_icon(Some(Icon::from_rgba(image_bytes, 48, 48).unwrap()));
 
     let context: WindowedContext<PossiblyCurrent> = unsafe {
         ContextBuilder::new()
