@@ -1,5 +1,6 @@
 use opencv::{core::Mat, prelude::*, videoio::VideoCapture, videoio::CAP_ANY};
 
+/// Iterating provider to let the user change the active camera.
 pub struct CameraSwitcher {
     current: Option<Camera>,
 }

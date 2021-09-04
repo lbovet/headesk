@@ -72,18 +72,15 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
 
     fb.use_vertex_shader(include_str!("./vertex_shader.glsl"));
     let mut distance: f32 = 1.0;
+    let distance_loc =
+        unsafe { gl::GetUniformLocation(fb.internal.program, b"distance\0".as_ptr() as *const _) };
 
     let mut chromakey = chromakey::new(&mut fb);
-    let distance_loc = unsafe {
-        gl::GetUniformLocation(fb.internal.program, b"distance\0".as_ptr() as *const _)
-    };
 
     let mut last_frame_instant = Instant::now();
     let mut last_mouse_wheel = Instant::now();
 
     let mut current_window_size = context.window().inner_size();
-
-    let started = Instant::now();
 
     let mut modifiers: Option<ModifiersState> = None;
 
@@ -91,6 +88,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
         let mut redraw = false;
         let window = context.window();
 
+        // grab a frame from the camera periodically
         if Instant::now() > last_frame_instant + Duration::from_millis(10) {
             camera_switcher.read(|data| {
                 chromakey.calibrate(data, buffer_size.width);
@@ -158,10 +156,14 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                     let increment: f32 = if match delta {
                         MouseScrollDelta::LineDelta(_, y) => y > 0.0,
                         MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
-                    } { -0.05 } else { 0.05 };
+                    } {
+                        -0.05
+                    } else {
+                        0.05
+                    };
                     distance += increment;
-                    distance = if distance > 1.0 { 1.0 } else { distance};
-                    distance = if distance < 0.2 { 0.2 } else { distance};
+                    distance = if distance > 1.0 { 1.0 } else { distance };
+                    distance = if distance < 0.2 { 0.2 } else { distance };
                     unsafe {
                         gl::ProgramUniform1f(fb.internal.program, distance_loc, distance);
                     }
@@ -205,9 +207,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
         }
 
         if redraw {
-            if Instant::now() > started + Duration::from_millis(200) {
-                context.window().set_visible(true);
-            }
+            context.window().set_visible(true);
             fb.redraw();
             context.swap_buffers().unwrap();
         }
