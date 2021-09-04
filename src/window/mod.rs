@@ -4,6 +4,7 @@ use std::time::Instant;
 
 use mini_gl_fb::core;
 use mini_gl_fb::glutin::dpi::LogicalSize;
+use mini_gl_fb::glutin::event::ModifiersState;
 use mini_gl_fb::glutin::event::VirtualKeyCode;
 use mini_gl_fb::glutin::event::WindowEvent::KeyboardInput;
 use mini_gl_fb::glutin::event::{ElementState, Event, WindowEvent};
@@ -69,7 +70,13 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
 
     let GlutinBreakout { context, mut fb } = glfb.glutin_breakout();
 
+    fb.use_vertex_shader(include_str!("./vertex_shader.glsl"));
+    let mut distance: f32 = 1.0;
+
     let mut chromakey = chromakey::new(&mut fb);
+    let distance_loc = unsafe {
+        gl::GetUniformLocation(fb.internal.program, b"distance\0".as_ptr() as *const _)
+    };
 
     let mut last_frame_instant = Instant::now();
     let mut last_mouse_wheel = Instant::now();
@@ -78,7 +85,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
 
     let started = Instant::now();
 
-    let right_button_pressed = false;
+    let mut modifiers: Option<ModifiersState> = None;
 
     event_loop.run(move |event, _, flow| {
         let mut redraw = false;
@@ -114,6 +121,12 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                 }
             }
             Event::WindowEvent {
+                event: WindowEvent::ModifiersChanged(state),
+                ..
+            } => {
+                modifiers = Some(state);
+            }
+            Event::WindowEvent {
                 event: WindowEvent::Resized(size),
                 ..
             } => {
@@ -123,7 +136,6 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                     position.y + (current_window_size.height as i32 - size.height as i32),
                 ));
                 current_window_size = size;
-                context.resize(size);
                 fb.resize_viewport(size.width, size.height);
                 window.request_redraw();
             }
@@ -142,34 +154,47 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                 event: WindowEvent::MouseWheel { delta, .. },
                 ..
             } => {
-                if Instant::now() > last_mouse_wheel + Duration::from_millis(25) {
-                    let current_size = window.inner_size();
-                    let elapsed = ((Instant::now() - last_mouse_wheel).as_millis() - 20) as u32;
-                    let accel = 3 - min(2, elapsed / 20);
-                    let h_step = 15 * accel;
-                    let w_step = 20 * accel;
-                    if match delta {
+                if modifiers.map(|m| m.ctrl()).unwrap_or_default() {
+                    let increment: f32 = if match delta {
                         MouseScrollDelta::LineDelta(_, y) => y > 0.0,
                         MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
-                    } {
-                        if current_size.height < 960 {
-                            window.set_inner_size(PhysicalSize::new(
-                                current_size.width + w_step,
-                                current_size.height + h_step,
-                            ));
-                        }
-                    } else {
-                        let visible_y =
-                            window.current_monitor().unwrap().size().height as i32 - 200;
-                        if current_size.width > 200
-                            && window.outer_position().unwrap().y < visible_y
-                        {
-                            window.set_inner_size(PhysicalSize::new(
-                                current_size.width - w_step,
-                                current_size.height - h_step,
-                            ));
-                        }
-                    };
+                    } { -0.05 } else { 0.05 };
+                    distance += increment;
+                    distance = if distance > 1.0 { 1.0 } else { distance};
+                    distance = if distance < 0.2 { 0.2 } else { distance};
+                    unsafe {
+                        gl::ProgramUniform1f(fb.internal.program, distance_loc, distance);
+                    }
+                } else {
+                    if Instant::now() > last_mouse_wheel + Duration::from_millis(25) {
+                        let elapsed = ((Instant::now() - last_mouse_wheel).as_millis()) as u32;
+                        let accel = 3 - min(2, elapsed / 20);
+                        let h_step = 15 * accel;
+                        let w_step = 20 * accel;
+                        let current_size = window.inner_size();
+                        if match delta {
+                            MouseScrollDelta::LineDelta(_, y) => y > 0.0,
+                            MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
+                        } {
+                            if current_size.height < 960 {
+                                window.set_inner_size(PhysicalSize::new(
+                                    current_size.width + w_step,
+                                    current_size.height + h_step,
+                                ));
+                            }
+                        } else {
+                            let visible_y =
+                                window.current_monitor().unwrap().size().height as i32 - 200;
+                            if current_size.width > 200
+                                && window.outer_position().unwrap().y < visible_y
+                            {
+                                window.set_inner_size(PhysicalSize::new(
+                                    current_size.width - w_step,
+                                    current_size.height - h_step,
+                                ));
+                            }
+                        };
+                    }
                     last_mouse_wheel = Instant::now();
                 }
             }

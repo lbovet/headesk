@@ -18,7 +18,7 @@ impl CameraSwitcher {
         result
     }
 
-    pub fn current(&self) -> Option<i32> {
+    pub fn _current(&self) -> Option<i32> {
         self.current.as_ref().map(|provider| provider.index)
     }
 
