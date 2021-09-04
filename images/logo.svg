@@ -7,8 +7,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   inkscape:export-ydpi="71.34449"
-   inkscape:export-xdpi="71.34449"
+   inkscape:export-ydpi="79.089996"
+   inkscape:export-xdpi="79.089996"
    inkscape:export-filename="/home/shaman/work/headesk/images/full-logo.png"
    sodipodi:docname="logo.svg"
    inkscape:version="1.0.1 (1.0.1+r73)"
@@ -38,13 +38,13 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.41104911"
-     inkscape:cx="510.73787"
-     inkscape:cy="454.09928"
+     inkscape:zoom="0.58131123"
+     inkscape:cx="962.57075"
+     inkscape:cy="175.17867"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer2"
      inkscape:document-rotation="0"
      showgrid="false"
      inkscape:window-width="1920"
@@ -54,7 +54,8 @@
      inkscape:window-maximized="1"
      showborder="false"
      showguides="true"
-     inkscape:guide-bbox="true">
+     inkscape:guide-bbox="true"
+     inkscape:pagecheckerboard="false">
     <sodipodi:guide
        position="126.8089,194.5649"
        orientation="0,-1"
@@ -74,63 +75,79 @@
   </metadata>
   <g
      inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="background">
+    <rect
+       style="fill:#ececec;fill-rule:evenodd;stroke-width:1.99798;stroke-linecap:round;stroke-linejoin:round;stop-color:#000000"
+       id="rect1410"
+       width="513.83588"
+       height="114.04504"
+       x="9.9499893"
+       y="8.8398952"
+       ry="57.022518" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="body"
-     style="display:inline">
-    <path
-       style="fill:#000080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.231005px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter955)"
-       d="m 96.956077,35.911807 c 0,0 9.570313,0.360657 18.589643,-2.353934 18.81789,-3.195572 27.26996,0.160832 39.06237,9.118919 15.86898,14.623 18.05496,30.78882 20.33309,52.18446 0.13116,5.658538 0.43185,7.343208 -5.57976,7.404658 -12.15676,0.0961 -20.47248,0.0488 -31.5181,0.0635 -6.06645,0.34646 -6.06894,-0.67676 -6.43227,-5.395958 -0.38231,-4.84732 -1.42665,-10.7872 -3.73024,-15.386 -2.31527,-4.62211 -5.29686,-7.00392 -9.70699,-7.43303 -5.46723,-0.53194 -12.82119,4.65681 -12.82119,4.65681 z"
-       id="path922"
-       sodipodi:nodetypes="cccccccsscc"
-       inkscape:export-xdpi="5.9075222"
-       inkscape:export-ydpi="5.9075222" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:112.476px;line-height:120%;font-family:Uroob;-inkscape-font-specification:Uroob;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#050505;fill-opacity:1;stroke:none;stroke-width:2.42481;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       x="174.55965"
-       y="102.4497"
-       id="text1420"><tspan
-         sodipodi:role="line"
-         id="tspan1418"
-         x="174.55965"
-         y="102.4497"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:112.476px;font-family:Uroob;-inkscape-font-specification:Uroob;fill:#050505;fill-opacity:1;stroke:none;stroke-width:2.42481;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">HEADESK</tspan></text>
-  </g>
+     style="display:inline" />
   <g
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="head and laptop"
      style="filter:url(#filter955)">
-    <rect
-       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.5347;stroke-linecap:round;stroke-linejoin:round;stop-color:#000000"
-       id="rect884-6"
-       width="11.906818"
-       height="75.086418"
-       x="90.52829"
-       y="-126.80891"
-       ry="5.8194075"
-       transform="rotate(90)"
-       inkscape:export-xdpi="5.734899"
-       inkscape:export-ydpi="5.734899" />
-    <rect
-       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.55227;stroke-linecap:round;stroke-linejoin:round;stop-color:#000000"
-       id="rect884-6-7"
-       width="11.906818"
-       height="76.815407"
-       x="-41.126183"
-       y="-112.59186"
-       ry="5.9534092"
-       transform="rotate(167.4599)"
-       inkscape:export-xdpi="5.734899"
-       inkscape:export-ydpi="5.734899" />
-    <ellipse
-       style="fill:#d40000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.5057;stroke-linecap:round;stroke-linejoin:round;stop-color:#000000"
-       id="path920"
-       cx="86.956612"
-       cy="60.14946"
-       rx="26.073942"
-       ry="26.506683"
-       inkscape:export-xdpi="5.734899"
-       inkscape:export-ydpi="5.734899" />
+    <g
+       id="g1421"
+       transform="translate(1.5462233,0.98432693)">
+      <path
+         style="display:inline;fill:#000080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.231005px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter955)"
+         d="m 96.956077,35.911807 c 0,0 9.570313,0.360657 18.589643,-2.353934 18.81789,-3.195572 27.26996,0.160832 39.06237,9.118919 15.86898,14.623 18.05496,30.78882 20.33309,52.18446 0.13116,5.658538 0.43185,7.343208 -5.57976,7.404658 -12.15676,0.0961 -20.47248,0.0488 -31.5181,0.0635 -6.06645,0.34646 -6.06894,-0.67676 -6.43227,-5.395958 -0.38231,-4.84732 -1.42665,-10.7872 -3.73024,-15.386 -2.31527,-4.62211 -5.29686,-7.00392 -9.70699,-7.43303 -5.46723,-0.53194 -12.82119,4.65681 -12.82119,4.65681 z"
+         id="path922"
+         sodipodi:nodetypes="cccccccsscc"
+         inkscape:export-xdpi="5.9075222"
+         inkscape:export-ydpi="5.9075222" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:112.476px;line-height:120%;font-family:Uroob;-inkscape-font-specification:Uroob;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;display:inline;fill:#050505;fill-opacity:1;stroke:none;stroke-width:2.42481;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         x="174.55965"
+         y="102.4497"
+         id="text1420"><tspan
+           sodipodi:role="line"
+           id="tspan1418"
+           x="174.55965"
+           y="102.4497"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:112.476px;font-family:Uroob;-inkscape-font-specification:Uroob;fill:#050505;fill-opacity:1;stroke:none;stroke-width:2.42481;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">HEADESK</tspan></text>
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.5347;stroke-linecap:round;stroke-linejoin:round;stop-color:#000000"
+         id="rect884-6"
+         width="11.906818"
+         height="75.086418"
+         x="90.52829"
+         y="-126.80891"
+         ry="5.8194075"
+         transform="rotate(90)"
+         inkscape:export-xdpi="5.734899"
+         inkscape:export-ydpi="5.734899" />
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.55227;stroke-linecap:round;stroke-linejoin:round;stop-color:#000000"
+         id="rect884-6-7"
+         width="11.906818"
+         height="76.815407"
+         x="-41.126183"
+         y="-112.59186"
+         ry="5.9534092"
+         transform="rotate(167.4599)"
+         inkscape:export-xdpi="5.734899"
+         inkscape:export-ydpi="5.734899" />
+      <ellipse
+         style="fill:#d40000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.5057;stroke-linecap:round;stroke-linejoin:round;stop-color:#000000"
+         id="path920"
+         cx="86.956612"
+         cy="60.14946"
+         rx="26.073942"
+         ry="26.506683"
+         inkscape:export-xdpi="5.734899"
+         inkscape:export-ydpi="5.734899" />
+    </g>
   </g>
 </svg>
