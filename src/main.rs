@@ -1,8 +1,9 @@
 mod camera;
 mod window;
+mod chromakey;
 
 use camera::Camera;
 
 fn main() {
-    window::create(Camera::init(1));
+    window::create(Camera::init(0));
 }

@@ -9,4 +9,5 @@ edition = "2018"
 mini_gl_fb = { git = "https://github.com/vivlim/mini_gl_fb.git" }
 gl = "0.10.0"
 winit = "0.25.0"
+color-rs = "0.6.1"
 opencv = "0.53.2"
