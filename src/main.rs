@@ -1,5 +1,6 @@
 mod camera;
 mod window;
+mod chromakey;
 
 use camera::Camera;
 

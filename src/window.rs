@@ -21,6 +21,7 @@ use winit::dpi::PhysicalSize;
 use winit::event::MouseScrollDelta;
 
 use crate::camera::Camera;
+use crate::chromakey;
 
 pub fn create(mut camera: Camera) {
     let event_loop = EventLoop::new();
@@ -57,18 +58,16 @@ pub fn create(mut camera: Camera) {
         false,
     );
 
-    let mut fb = MiniGlFb {
+    let mut glfb = MiniGlFb {
         internal: core::Internal { context, fb },
     };
 
-    fb.set_resizable(true);
+    glfb.set_resizable(true);
+    glfb.change_buffer_format::<u8>(BufferFormat::BGR);
 
-    fb.internal
-        .fb
-        .use_fragment_shader(include_str!("./fragment_shader.glsl"));
-    fb.change_buffer_format::<u8>(BufferFormat::BGR);
+    let GlutinBreakout { context, mut fb } = glfb.glutin_breakout();
 
-    let GlutinBreakout { context, mut fb } = fb.glutin_breakout();
+    let mut chromakey = chromakey::new(&mut fb);
 
     let mut last_frame_instant = Instant::now();
     let mut last_mouse_wheel = Instant::now();
@@ -81,6 +80,7 @@ pub fn create(mut camera: Camera) {
 
         if Instant::now() > last_frame_instant + Duration::from_millis(10) {
             camera.read(|data| {
+                chromakey.calibrate(data, buffer_size.width);
                 fb.update_buffer(data);
                 redraw = true;
             });
