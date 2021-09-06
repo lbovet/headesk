@@ -7,7 +7,6 @@ use mini_gl_fb::gl;
 use mini_gl_fb::glutin::dpi::LogicalSize;
 use mini_gl_fb::glutin::dpi::PhysicalPosition;
 use mini_gl_fb::glutin::dpi::PhysicalSize;
-use mini_gl_fb::glutin::event::ModifiersState;
 use mini_gl_fb::glutin::event::MouseButton;
 use mini_gl_fb::glutin::event::MouseScrollDelta;
 use mini_gl_fb::glutin::event::VirtualKeyCode;
@@ -82,8 +81,11 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
 
     fb.use_vertex_shader(include_str!("./vertex_shader.glsl"));
     let mut distance: f32 = 1.0;
+    let mut offset: (f32, f32) = (0.0, 0.0);
     let distance_loc =
         unsafe { gl::GetUniformLocation(fb.internal.program, b"distance\0".as_ptr() as *const _) };
+    let offset_loc =
+        unsafe { gl::GetUniformLocation(fb.internal.program, b"offset\0".as_ptr() as *const _) };
 
     let mut chromakey = chromakey::new(&mut fb);
 
@@ -92,7 +94,11 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
 
     let mut current_window_size = context.window().inner_size();
 
-    let mut modifiers: Option<ModifiersState> = None;
+    let mut is_ctrl = false;
+    let mut left_pressed = false;
+    let mut mouse_pos: Option<PhysicalPosition<f64>> = None;
+    let mut drag_start: Option<PhysicalPosition<f64>> = None;
+    let mut offset_delta: (f32, f32) = (0.0, 0.0);
 
     event_loop.run(move |event, _, flow| {
         let mut redraw = false;
@@ -133,7 +139,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                 event: WindowEvent::ModifiersChanged(state),
                 ..
             } => {
-                modifiers = Some(state);
+                is_ctrl = state.ctrl();
                 chromakey.set_highlight(state.ctrl());
             }
             Event::WindowEvent {
@@ -154,19 +160,65 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                 ..
             } => {
                 if button == MouseButton::Left && state == ElementState::Pressed {
-                    window.drag_window().unwrap();
+                    if is_ctrl {
+                        if let Some(position) = mouse_pos {
+                            drag_start = Some(position);
+                        }
+                    } else {
+                        window.drag_window().unwrap();
+                    }
+                }
+                if button == MouseButton::Left && state == ElementState::Released {
+                    offset = (offset.0 + offset_delta.0, offset.1 + offset_delta.1);
+                    offset_delta = (0.0, 0.0);
                 }
                 if button == MouseButton::Right && state == ElementState::Released {
                     context.window().set_cursor_icon(CursorIcon::Wait);
                     camera_switcher.next();
+                    drag_start = None;
+                }
+                left_pressed = button == MouseButton::Left && state == ElementState::Pressed;
+            }
+            Event::WindowEvent {
+                event: WindowEvent::CursorMoved { position, .. },
+                ..
+            } => {
+                if is_ctrl && left_pressed {
+                    if let Some(start) = drag_start {
+                        let rel_dx = (position.x - start.x) / window.inner_size().width as f64;
+                        let rel_dy = -(position.y - start.y) / window.inner_size().height as f64;
+                        let mut offset_dx = 2.0 * distance * rel_dx as f32;
+                        let mut offset_dy = 2.0 * distance * rel_dy as f32;
+                        let offset_x = offset.0 + offset_dx;
+                        let offset_y = offset.1 + offset_dy;
+
+                        if offset_x.abs() > 1.0 - distance {
+                            offset_dx = (1.0 - distance) * offset_x.signum() - offset.0;
+                        }
+                        if offset_y.abs() > 1.0 - distance {
+                            offset_dy = (1.0 - distance) * offset_y.signum() - offset.1;
+                        }
+
+                        offset_delta = (offset_dx, offset_dy);
+                        unsafe {
+                            gl::ProgramUniform2f(
+                                fb.internal.program,
+                                offset_loc,
+                                offset.0 + offset_delta.0,
+                                offset.1 + offset_delta.1,
+                            );
+                        }
+                    }
+                } else {
+                    mouse_pos = Some(position);
                 }
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseWheel { delta, .. },
                 ..
             } => {
-                if modifiers.map(|m| m.ctrl()).unwrap_or_default() {
-                    let increment: f32 = if match delta {
+                if is_ctrl {
+                    let mut increment: f32 = if match delta {
                         MouseScrollDelta::LineDelta(_, y) => y > 0.0,
                         MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
                     } {
@@ -174,11 +226,27 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                     } else {
                         0.05
                     };
-                    distance += increment;
-                    distance = if distance > 1.0 { 1.0 } else { distance };
-                    distance = if distance < 0.2 { 0.2 } else { distance };
+                    if distance + increment > 1.0 {
+                        increment = 1.0 - distance;
+                        distance = 1.0
+                    } else if distance + increment < 0.2 {
+                        increment = 0.2 - distance;
+                        distance = 0.2
+                    } else {
+                        distance += increment;
+                    }
+                    let mut offset_x = offset.0;
+                    let mut offset_y = offset.1 - increment; // snap to the bottom
+                    if offset_x.abs() > (1.0 - distance) {
+                        offset_x = (1.0 - distance) * offset_x.signum();
+                    }
+                    if offset_y.abs() > (1.0 - distance) {
+                        offset_y = (1.0 - distance) * offset_y.signum();
+                    }
+                    offset = (offset_x, offset_y);
                     unsafe {
                         gl::ProgramUniform1f(fb.internal.program, distance_loc, distance);
+                        gl::ProgramUniform2f(fb.internal.program, offset_loc, offset.0, offset.1);
                     }
                 } else {
                     if Instant::now() > last_mouse_wheel + Duration::from_millis(25) {
@@ -213,6 +281,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                     last_mouse_wheel = Instant::now();
                 }
             }
+
             Event::RedrawRequested(_) => {
                 redraw = true;
             }
@@ -226,3 +295,4 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
         }
     });
 }
+
