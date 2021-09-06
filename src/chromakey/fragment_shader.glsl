@@ -6,6 +6,7 @@ out vec4 frag_color;
 
 uniform vec4 keyRGBA;
 uniform sampler2D u_buffer;
+uniform bool highlight;
 
 vec3 rgb2hsv(vec3 rgb) {
 	float Cmax = max(rgb.r, max(rgb.g, rgb.b));
@@ -28,23 +29,31 @@ vec3 rgb2hsv(vec3 rgb) {
 	return hsv;
 }
 
-vec2 RGBAToCC(vec3 color) {
+vec2 toCC(vec3 color) {
 	float y = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
 	return vec2((color.b - y) * 0.565, (color.r - y) * 0.713);
 };
+
+vec4 background() {
+	if(highlight) {
+		return vec4(0.6, 0., 0., 0.2);
+	} else {
+		return vec4(0, 0, 0, 0);
+	}
+}
 
 float chromaKey(vec3 color) {
 	vec3 backgroundColor = keyRGBA.rgb;
 	vec3 weights = vec3(7., 1., 3.);
 	vec3 hsv = rgb2hsv(color);
 	vec3 target = rgb2hsv(backgroundColor);
-	float dist = length(weights * vec3((target - hsv).x, RGBAToCC(color) - RGBAToCC(keyRGBA.rgb)));
+	float dist = length(weights * vec3((target - hsv).x, toCC(color) - toCC(keyRGBA.rgb)));
 	return 1. - smoothstep(0., 1., 3. * dist - 1);
 }
 
 vec4 blackKey(vec3 color) {
 	if(color == vec3(0., 0., 0.)) {
-		return vec4(0., 0., 0., 0.);
+		return background();
 	} else {
 		return vec4(color, 1.);
 	}
@@ -66,7 +75,7 @@ void main() {
 	} else if(keyRGBA != vec4(1., 1., 1., 1.)) {
 		float incrustation = chromaKey(color.rgb);
 		color = desaturate(color.rgb);
-		color = mix(color, vec4(0, 0, 0, 0), incrustation);
+		color = mix(color, background(), incrustation);
 	}
 	frag_color = color;
 }

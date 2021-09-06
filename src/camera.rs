@@ -17,7 +17,11 @@ pub struct Camera {
 
 impl CameraSwitcher {
     pub fn new(index: i32) -> CameraSwitcher {
-        let mut result = CameraSwitcher { width: 640, height: 480, current: None };
+        let mut result = CameraSwitcher {
+            width: 640,
+            height: 480,
+            current: None,
+        };
         result.set_current(index);
         if let None = result.current {
             result.next();
@@ -83,14 +87,17 @@ impl Camera {
         match VideoCapture::new(index, CAP_ANY) {
             Ok(video) => {
                 if VideoCapture::is_opened(&video).unwrap() {
-                    Some(Camera { index, video, width, height })
+                    Some(Camera {
+                        index,
+                        video,
+                        width,
+                        height,
+                    })
                 } else {
                     None
                 }
             }
-            Err(_) => {
-                None
-            }
+            Err(_) => None,
         }
     }
 
@@ -100,7 +107,8 @@ impl Camera {
         match self.video.read(&mut frame) {
             Ok(true) => unsafe {
                 let bad_read_time = Instant::now() > grab_start + Duration::from_millis(1000);
-                let wrong_size = frame.size().unwrap() != Size::new(self.width as i32, self.height as i32);
+                let wrong_size =
+                    frame.size().unwrap() != Size::new(self.width as i32, self.height as i32);
                 if bad_read_time || wrong_size {
                     return false;
                 }

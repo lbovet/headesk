@@ -5,19 +5,19 @@ use std::time::Instant;
 use mini_gl_fb::core;
 use mini_gl_fb::gl;
 use mini_gl_fb::glutin::dpi::LogicalSize;
+use mini_gl_fb::glutin::dpi::PhysicalPosition;
+use mini_gl_fb::glutin::dpi::PhysicalSize;
 use mini_gl_fb::glutin::event::ModifiersState;
-use mini_gl_fb::glutin::event::VirtualKeyCode;
 use mini_gl_fb::glutin::event::MouseButton;
 use mini_gl_fb::glutin::event::MouseScrollDelta;
+use mini_gl_fb::glutin::event::VirtualKeyCode;
 use mini_gl_fb::glutin::event::WindowEvent::KeyboardInput;
 use mini_gl_fb::glutin::event::{ElementState, Event, WindowEvent};
 use mini_gl_fb::glutin::event_loop::ControlFlow;
 use mini_gl_fb::glutin::event_loop::EventLoop;
-use mini_gl_fb::glutin::window::WindowBuilder;
-use mini_gl_fb::glutin::window::Icon;
 use mini_gl_fb::glutin::window::CursorIcon;
-use mini_gl_fb::glutin::dpi::PhysicalPosition;
-use mini_gl_fb::glutin::dpi::PhysicalSize;
+use mini_gl_fb::glutin::window::Icon;
+use mini_gl_fb::glutin::window::WindowBuilder;
 use mini_gl_fb::glutin::ContextBuilder;
 use mini_gl_fb::glutin::PossiblyCurrent;
 use mini_gl_fb::glutin::WindowedContext;
@@ -134,6 +134,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                 ..
             } => {
                 modifiers = Some(state);
+                chromakey.set_highlight(state.ctrl());
             }
             Event::WindowEvent {
                 event: WindowEvent::Resized(size),

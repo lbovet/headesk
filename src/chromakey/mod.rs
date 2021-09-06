@@ -12,6 +12,7 @@ pub struct ChromaKey {
     last_calibration_time: Instant,
     program: gl::types::GLuint,
     key_rgba_loc: gl::types::GLint,
+    highlight: gl::types::GLint,
 }
 
 /// Creates a chroma key context. It automatically configures the OpenGL context.
@@ -34,6 +35,10 @@ pub fn new(fb: &mut Framebuffer) -> ChromaKey {
             key_rgba_loc: gl::GetUniformLocation(
                 fb.internal.program,
                 b"keyRGBA\0".as_ptr() as *const _,
+            ),
+            highlight: gl::GetUniformLocation(
+                fb.internal.program,
+                b"highlight\0".as_ptr() as *const _,
             ),
         }
     }
@@ -103,6 +108,12 @@ impl ChromaKey {
             let g = rgb.g as f32;
             let b = rgb.b as f32;
             rgb_to_cc(r, g, b)
+        }
+    }
+
+    pub fn set_highlight(&mut self, value: bool) {
+        unsafe {
+            gl::ProgramUniform1i(self.program, self.highlight, value as i32);
         }
     }
 
