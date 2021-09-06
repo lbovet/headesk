@@ -10,3 +10,6 @@ mini_gl_fb = { git = "https://github.com/vivlim/mini_gl_fb.git" }
 opencv = "0.53.2"
 color-rs = "0.6.1"
 image = "0.23.14"
+preferences-ron = "2.0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

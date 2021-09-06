@@ -16,20 +16,15 @@ pub struct Camera {
 }
 
 impl CameraSwitcher {
-    pub fn new(index: i32) -> CameraSwitcher {
-        let mut result = CameraSwitcher {
+    pub fn new() -> CameraSwitcher {
+        CameraSwitcher {
             width: 640,
             height: 480,
             current: None,
-        };
-        result.set_current(index);
-        if let None = result.current {
-            result.next();
         }
-        result
     }
 
-    pub fn _current(&self) -> Option<i32> {
+    pub fn current(&self) -> Option<i32> {
         self.current.as_ref().map(|provider| provider.index)
     }
 
