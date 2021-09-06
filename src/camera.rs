@@ -1,17 +1,23 @@
-use opencv::{core::Mat, prelude::*, videoio::VideoCapture, videoio::CAP_ANY};
+use std::time::{Duration, Instant};
+
+use opencv::{core::Mat, core::Size, prelude::*, videoio::VideoCapture, videoio::CAP_ANY};
 
 /// Iterating provider to let the user change the active camera.
 pub struct CameraSwitcher {
+    pub width: u32,
+    pub height: u32,
     current: Option<Camera>,
 }
 pub struct Camera {
+    width: u32,
+    height: u32,
     index: i32,
     video: VideoCapture,
 }
 
 impl CameraSwitcher {
     pub fn new(index: i32) -> CameraSwitcher {
-        let mut result = CameraSwitcher { current: None };
+        let mut result = CameraSwitcher { width: 640, height: 480, current: None };
         result.set_current(index);
         if let None = result.current {
             result.next();
@@ -27,7 +33,7 @@ impl CameraSwitcher {
         if let Some(camera) = &mut self.current {
             camera.close()
         }
-        if let Some(camera) = Camera::init(index) {
+        if let Some(camera) = Camera::init(index, self.width, self.height) {
             self.current.replace(camera);
             return true;
         }
@@ -58,7 +64,10 @@ impl CameraSwitcher {
 
     pub fn read<F: FnMut(&[u8]) -> ()>(&mut self, func: F) {
         if let Some(camera) = &mut self.current {
-            camera.read(func)
+            if !camera.read(func) {
+                // switch to next camera if it cannot read or frames are not the right size
+                self.next();
+            }
         }
     }
 
@@ -70,27 +79,31 @@ impl CameraSwitcher {
 }
 
 impl Camera {
-    pub fn init(index: i32) -> Option<Camera> {
+    pub fn init(index: i32, width: u32, height: u32) -> Option<Camera> {
         match VideoCapture::new(index, CAP_ANY) {
-            Ok(cam) => {
-                if VideoCapture::is_opened(&cam).unwrap() {
-                    Some(Camera { index, video: cam })
+            Ok(video) => {
+                if VideoCapture::is_opened(&video).unwrap() {
+                    Some(Camera { index, video, width, height })
                 } else {
-                    eprintln!("Camera {} could not be opened", index);
                     None
                 }
             }
-            Err(why) => {
-                eprintln!("Cannot create camera {}: {}", index, why);
+            Err(_) => {
                 None
             }
         }
     }
 
-    pub fn read<F: FnMut(&[u8]) -> ()>(&mut self, mut func: F) {
+    pub fn read<F: FnMut(&[u8]) -> ()>(&mut self, mut func: F) -> bool {
         let mut frame = Mat::default();
+        let grab_start = Instant::now();
         match self.video.read(&mut frame) {
             Ok(true) => unsafe {
+                let bad_read_time = Instant::now() > grab_start + Duration::from_millis(1000);
+                let wrong_size = frame.size().unwrap() != Size::new(self.width as i32, self.height as i32);
+                if bad_read_time || wrong_size {
+                    return false;
+                }
                 match Mat::data_typed_unchecked::<u8>(&frame.reshape(1, 1).unwrap()) {
                     Ok(data) => {
                         func(&data);
@@ -104,12 +117,14 @@ impl Camera {
                 }
             },
             Ok(false) => {
-                // no frame, do nothing
+                return false;
             }
             Err(why) => {
                 eprintln!("Could not read frame from camera {}: {}", self.index, why);
+                return false;
             }
         }
+        true
     }
 
     fn close(&mut self) {

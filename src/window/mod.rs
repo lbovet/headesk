@@ -15,6 +15,7 @@ use mini_gl_fb::glutin::event_loop::ControlFlow;
 use mini_gl_fb::glutin::event_loop::EventLoop;
 use mini_gl_fb::glutin::window::WindowBuilder;
 use mini_gl_fb::glutin::window::Icon;
+use mini_gl_fb::glutin::window::CursorIcon;
 use mini_gl_fb::glutin::dpi::PhysicalPosition;
 use mini_gl_fb::glutin::dpi::PhysicalSize;
 use mini_gl_fb::glutin::ContextBuilder;
@@ -31,8 +32,8 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
     let event_loop = EventLoop::new();
 
     let window_title = String::from("Headesk");
-    let window_size = LogicalSize::new(640, 480);
-    let buffer_size = LogicalSize::new(640, 480);
+    let window_size = LogicalSize::new(camera_switcher.width, camera_switcher.height);
+    let buffer_size = LogicalSize::new(camera_switcher.width, camera_switcher.height);
 
     let icon_png = include_bytes!("../../images/small-icon-48.png");
     let image = image::load_from_memory(icon_png);
@@ -77,6 +78,8 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
 
     let GlutinBreakout { context, mut fb } = glfb.glutin_breakout();
 
+    context.window().set_cursor_icon(CursorIcon::Wait);
+
     fb.use_vertex_shader(include_str!("./vertex_shader.glsl"));
     let mut distance: f32 = 1.0;
     let distance_loc =
@@ -102,6 +105,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                 fb.update_buffer(data);
                 redraw = true;
             });
+            context.window().set_cursor_icon(CursorIcon::Default);
             last_frame_instant = Instant::now();
         }
         *flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(5));
@@ -152,6 +156,7 @@ pub fn create(mut camera_switcher: CameraSwitcher) {
                     window.drag_window().unwrap();
                 }
                 if button == MouseButton::Right && state == ElementState::Released {
+                    context.window().set_cursor_icon(CursorIcon::Wait);
                     camera_switcher.next();
                 }
             }
