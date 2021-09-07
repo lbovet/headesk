@@ -14,6 +14,7 @@ use mini_gl_fb::glutin::event::WindowEvent::KeyboardInput;
 use mini_gl_fb::glutin::event::{ElementState, Event, WindowEvent};
 use mini_gl_fb::glutin::event_loop::ControlFlow;
 use mini_gl_fb::glutin::event_loop::EventLoop;
+use mini_gl_fb::glutin::platform::windows::WindowBuilderExtWindows;
 use mini_gl_fb::glutin::window::CursorIcon;
 use mini_gl_fb::glutin::window::Icon;
 use mini_gl_fb::glutin::window::WindowBuilder;
@@ -65,7 +66,8 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
     let image = image::load_from_memory(icon_png);
     let image_bytes = image.unwrap().as_rgba8().unwrap().as_raw().to_vec();
 
-    let window_builder = WindowBuilder::new()
+    #[allow(unused_mut)]
+    let mut window_builder = WindowBuilder::new()
         .with_position(PhysicalPosition::new(view.position.0, view.position.1))
         .with_decorations(false)
         .with_always_on_top(true)
@@ -75,6 +77,15 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
         .with_visible(false)
         .with_resizable(true)
         .with_window_icon(Some(Icon::from_rgba(image_bytes, 48, 48).unwrap()));
+
+    #[cfg(target_os = "windows")]
+    {
+        let icon_png = include_bytes!("../../images/icon-512.png");
+        let image = image::load_from_memory(icon_png);
+        let image_bytes = image.unwrap().as_rgba8().unwrap().as_raw().to_vec();
+        window_builder = window_builder
+            .with_taskbar_icon(Some(Icon::from_rgba(image_bytes, 512, 512).unwrap()));
+    }
 
     let context: WindowedContext<PossiblyCurrent> = unsafe {
         ContextBuilder::new()
