@@ -6,11 +6,18 @@
 
 Headesk displays your webcam video on your desktop over the other windows. Ideal for remote presentations and demos.
 
+### Usage
+
 * **Move Window**:`Left Click` and drag.
 * **Resize Window**: `Mousewheel`.
 * **Zoom Content**: `Ctrl + Mousewheel`.
 * **Move Content**: `Ctrl + Left Click` and drag.
 * **Change Camera**: `Right Click`.
+
+### Background Removal
+
+* Use a virtual camera like [XSplit VCam](https://www.xsplit.com/vcam) or equivalent.
+* Automatic chroma key detection with a green screen (experimental).
 
 ## Install
 
