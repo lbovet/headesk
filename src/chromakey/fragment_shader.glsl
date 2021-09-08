@@ -8,6 +8,9 @@ uniform vec4 keyRGBA;
 uniform sampler2D u_buffer;
 uniform bool highlight;
 
+const vec2 pixel_size = vec2(1.0 / 640.0, 1.0 / 480.0);
+const int antialias_radius = 4;
+
 vec3 rgb2hsv(vec3 rgb) {
 	float Cmax = max(rgb.r, max(rgb.g, rgb.b));
 	float Cmin = min(rgb.r, min(rgb.g, rgb.b));
@@ -51,11 +54,23 @@ float chromaKey(vec3 color) {
 	return 1. - smoothstep(0., 1., 3. * dist - 1);
 }
 
+float blackKeyAntialias() {
+	float transparency = 0.0;
+	for(int i=-antialias_radius; i < antialias_radius; i++) {
+		for(int j=-antialias_radius; j < antialias_radius; j++) {
+			if(texture(u_buffer, v_uv + pixel_size * vec2(i,j)).rgb == vec3(0., 0., 0.)) {
+				transparency ++;
+			}
+		}
+	}
+	return 1.0 - transparency / pow(antialias_radius, 2);
+}
+
 vec4 blackKey(vec3 color) {
 	if(color == vec3(0., 0., 0.)) {
 		return background();
 	} else {
-		return vec4(color, 1.);
+		return vec4(color, blackKeyAntialias());
 	}
 }
 
