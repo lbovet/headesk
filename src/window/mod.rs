@@ -14,7 +14,6 @@ use mini_gl_fb::glutin::event::WindowEvent::KeyboardInput;
 use mini_gl_fb::glutin::event::{ElementState, Event, WindowEvent};
 use mini_gl_fb::glutin::event_loop::ControlFlow;
 use mini_gl_fb::glutin::event_loop::EventLoop;
-use mini_gl_fb::glutin::platform::windows::WindowBuilderExtWindows;
 use mini_gl_fb::glutin::window::CursorIcon;
 use mini_gl_fb::glutin::window::Icon;
 use mini_gl_fb::glutin::window::WindowBuilder;
@@ -24,6 +23,9 @@ use mini_gl_fb::glutin::WindowedContext;
 use mini_gl_fb::BufferFormat;
 use mini_gl_fb::GlutinBreakout;
 use mini_gl_fb::MiniGlFb;
+
+#[cfg(target_os = "windows")]
+use mini_gl_fb::glutin::platform::windows::WindowBuilderExtWindows;
 
 use crate::camera::CameraSwitcher;
 use crate::chromakey;
