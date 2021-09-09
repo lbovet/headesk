@@ -8,8 +8,13 @@ uniform vec4 keyRGBA;
 uniform sampler2D u_buffer;
 uniform bool highlight;
 
+uniform float distance;
+uniform vec2 offset;
+
 const vec2 pixel_size = vec2(1.0 / 640.0, 1.0 / 480.0);
 const int antialias_radius = 4;
+
+const int sample_radius = 6;
 
 vec3 rgb2hsv(vec3 rgb) {
 	float Cmax = max(rgb.r, max(rgb.g, rgb.b));
@@ -32,10 +37,9 @@ vec3 rgb2hsv(vec3 rgb) {
 	return hsv;
 }
 
-vec2 toCC(vec3 color) {
-	float y = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
-	return vec2((color.b - y) * 0.565, (color.r - y) * 0.713);
-};
+vec2 toUVCoords(vec2 viewportCoords) {
+	return viewportCoords * distance + 0.5 * ((1.0 - distance) * vec2(1, 1) - offset * vec2(1, -1));
+}
 
 vec4 background() {
 	if(highlight) {
@@ -45,21 +49,41 @@ vec4 background() {
 	}
 }
 
-float chromaKey(vec3 color) {
-	vec3 backgroundColor = keyRGBA.rgb;
-	vec3 weights = vec3(7., 1., 3.);
-	vec3 hsv = rgb2hsv(color);
-	vec3 target = rgb2hsv(backgroundColor);
-	float dist = length(weights * vec3((target - hsv).x, toCC(color) - toCC(keyRGBA.rgb)));
-	return 1. - smoothstep(0., 1., 3. * dist - 1);
+vec3 sample(vec2 uv) {
+	vec3 mixColor = vec3(0, 0, 0);
+	for(int i = -sample_radius; i < sample_radius; i++) {
+		for(int j = -sample_radius; j < sample_radius; j++) {
+			mixColor += texture(u_buffer, uv + pixel_size * vec2(i, j)).rgb;
+		}
+	}
+	return mixColor / pow(sample_radius, 2);
+}
+
+float sampleKeyHue() {
+	vec3 topLeft = rgb2hsv(sample(toUVCoords(vec2(0.05, 0.05))));
+	vec3 topRight = rgb2hsv(sample(toUVCoords(vec2(0.95, 0.05))));
+	if( topLeft.s > 0.3 && abs(topLeft.x - topRight.x) < 0.05) {
+		return (topLeft.x + topRight.x) / 2.0;
+	} else {
+		return -1.0;
+	}
+}
+
+float chromaKey(vec3 color, float keyHue) {
+	vec3 color_hsv = rgb2hsv(color);
+	if(color_hsv.y < 0.2 || color_hsv.z < 0.3) {
+		return 0.0;
+	}
+	float dist = abs(color_hsv.x - keyHue);
+	return 1 - smoothstep(0., 0.15, dist);
 }
 
 float blackKeyAntialias() {
 	float transparency = 0.0;
-	for(int i=-antialias_radius; i < antialias_radius; i++) {
-		for(int j=-antialias_radius; j < antialias_radius; j++) {
-			if(texture(u_buffer, v_uv + pixel_size * vec2(i,j)).rgb == vec3(0., 0., 0.)) {
-				transparency ++;
+	for(int i = -antialias_radius; i < antialias_radius; i++) {
+		for(int j = -antialias_radius; j < antialias_radius; j++) {
+			if(texture(u_buffer, v_uv + pixel_size * vec2(i, j)).rgb == vec3(0., 0., 0.)) {
+				transparency++;
 			}
 		}
 	}
@@ -74,10 +98,9 @@ vec4 blackKey(vec3 color) {
 	}
 }
 
-vec4 desaturate(vec3 color) {
+vec4 desaturate(vec3 color, float keyHue) {
 	vec3 hsv = rgb2hsv(color);
-	vec3 target = rgb2hsv(keyRGBA.rgb);
-	float sat = smoothstep(0, 0.4, length(target.x - hsv.x));
+	float sat = smoothstep(0, 0.4, abs(hsv.x - keyHue));
 	float luma = dot(vec3(0.213, 0.715, 0.072) * color, vec3(1.));
 	vec4 result = vec4(mix(vec3(luma), color, sat), 1.0);
 	return result;
@@ -85,11 +108,12 @@ vec4 desaturate(vec3 color) {
 
 void main() {
 	vec4 color = texture(u_buffer, v_uv);
+	float keyHue = sampleKeyHue();
 	if(keyRGBA.rgb == vec3(0., 0., 0.)) {
 		color = blackKey(color.rgb);
-	} else if(keyRGBA != vec4(1., 1., 1., 1.)) {
-		float incrustation = chromaKey(color.rgb);
-		color = desaturate(color.rgb);
+	} else if(keyHue != -1) {
+		float incrustation = chromaKey(color.rgb, keyHue);
+		//color = desaturate(color.rgb, keyHue);
 		color = mix(color, background(), incrustation);
 	}
 	frag_color = color;
