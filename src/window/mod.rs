@@ -160,6 +160,9 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
 
         match event {
             Event::LoopDestroyed => {
+                view.position = window.outer_position().map_or(view.position, |p| {
+                    (p.x, p.y)
+                });
                 view.camera_index = camera_switcher.current().unwrap_or_default();
                 store(view);
                 camera_switcher.close();
