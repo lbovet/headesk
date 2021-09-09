@@ -147,7 +147,6 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
         // grab a frame from the camera periodically
         if Instant::now() > last_frame_instant + Duration::from_millis(10) {
             camera_switcher.read(|data| {
-                chromakey.calibrate(data, buffer_size.width);
                 fb.update_buffer(data);
                 redraw = true;
             });
@@ -160,9 +159,9 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
 
         match event {
             Event::LoopDestroyed => {
-                view.position = window.outer_position().map_or(view.position, |p| {
-                    (p.x, p.y)
-                });
+                view.position = window
+                    .outer_position()
+                    .map_or(view.position, |p| (p.x, p.y));
                 view.camera_index = camera_switcher.current().unwrap_or_default();
                 store(view);
                 camera_switcher.close();

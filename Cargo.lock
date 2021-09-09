@@ -49,17 +49,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "000444226fcff248f2bc4c7625be32c63caccfecc2723a2b9f78a7487a49c407"
 
 [[package]]
-name = "angle"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba2ba87287a952ce1802117f6201af6ff3f32dd372f42dbf53217e900bac7881"
-dependencies = [
- "num-traits",
- "serde",
- "serde_derive",
-]
-
-[[package]]
 name = "app_dirs2"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -208,19 +197,6 @@ dependencies = [
  "foreign-types",
  "libc",
  "objc",
-]
-
-[[package]]
-name = "color-rs"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59f43d9768f46589e0b9f246486f49a5b841b29651503c919d0ed3f1e679fc70"
-dependencies = [
- "angle",
- "half",
- "num-traits",
- "serde",
- "serde_derive",
 ]
 
 [[package]]
@@ -703,16 +679,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "half"
-version = "1.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62aca2aba2d62b4a7f5b33f3712cb1b0692779a56fb510499d5c0aa594daeaf3"
-
-[[package]]
 name = "headesk"
 version = "1.0.0"
 dependencies = [
- "color-rs",
  "image",
  "mini_gl_fb",
  "opencv",
