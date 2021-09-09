@@ -1,4 +1,3 @@
-use std::cmp::min;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -85,8 +84,8 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
         let icon_png = include_bytes!("../../images/icon-512.png");
         let image = image::load_from_memory(icon_png);
         let image_bytes = image.unwrap().as_rgba8().unwrap().as_raw().to_vec();
-        window_builder = window_builder
-            .with_taskbar_icon(Some(Icon::from_rgba(image_bytes, 512, 512).unwrap()));
+        window_builder =
+            window_builder.with_taskbar_icon(Some(Icon::from_rgba(image_bytes, 512, 512).unwrap()));
     }
 
     let context: WindowedContext<PossiblyCurrent> = unsafe {
@@ -130,13 +129,16 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
     set_geometry(&fb, view, distance_loc, offset_loc);
 
     let mut last_frame_instant = Instant::now();
-    let mut last_mouse_wheel = Instant::now();
 
     let mut is_ctrl = false;
     let mut left_pressed = false;
     let mut mouse_pos: Option<PhysicalPosition<f64>> = None;
     let mut drag_start: Option<PhysicalPosition<f64>> = None;
     let mut offset_delta: (f32, f32) = (0.0, 0.0);
+
+    let mut last_zoom_event = Instant::now();
+
+    let mut first_loop = true;
 
     event_loop.run(move |event, _, flow| {
         let mut redraw = false;
@@ -150,8 +152,10 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
                 redraw = true;
             });
             context.window().set_cursor_icon(CursorIcon::Default);
+
             last_frame_instant = Instant::now();
         }
+
         *flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(5));
 
         match event {
@@ -184,23 +188,13 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
                 chromakey.set_highlight(state.ctrl());
             }
             Event::WindowEvent {
-                event: WindowEvent::Resized(size),
-                ..
-            } => {
-                let position = window.outer_position().unwrap();
-                window.set_outer_position(PhysicalPosition::new(
-                    position.x + (view.size.0 as i32 - size.width as i32) / 2,
-                    position.y + (view.size.1 as i32 - size.height as i32),
-                ));
-                view.size = (size.width, size.height);
-                fb.resize_viewport(size.width, size.height);
-                window.request_redraw();
-            }
-            Event::WindowEvent {
                 event: WindowEvent::Moved(position),
                 ..
             } => {
-                view.position = (position.x, position.y);
+                // avoid messing up with zoom events because of weird X11 event ordering bug
+                if Instant::now() > last_zoom_event + Duration::from_millis(100) {
+                    view.position = (position.x, position.y);
+                }
             }
             Event::WindowEvent {
                 event: WindowEvent::MouseInput { state, button, .. },
@@ -296,36 +290,38 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
                     view.offset = (offset_x, offset_y);
                     set_geometry(&fb, view, distance_loc, offset_loc);
                 } else {
-                    if Instant::now() > last_mouse_wheel + Duration::from_millis(25) {
-                        let elapsed = ((Instant::now() - last_mouse_wheel).as_millis()) as u32;
-                        let accel = 3 - min(2, elapsed / 20);
-                        let h_step = 15 * accel;
-                        let w_step = 20 * accel;
-                        let current_size = window.inner_size();
-                        if match delta {
-                            MouseScrollDelta::LineDelta(_, y) => y > 0.0,
-                            MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
-                        } {
-                            if current_size.height < 960 {
-                                window.set_inner_size(PhysicalSize::new(
-                                    current_size.width + w_step,
-                                    current_size.height + h_step,
-                                ));
-                            }
-                        } else {
-                            let visible_y =
-                                window.current_monitor().unwrap().size().height as i32 - 200;
-                            if current_size.width > 200
-                                && window.outer_position().unwrap().y < visible_y
-                            {
-                                window.set_inner_size(PhysicalSize::new(
-                                    current_size.width - w_step,
-                                    current_size.height - h_step,
-                                ));
-                            }
+                    let h_step = 15;
+                    let w_step = 20;
+                    if match delta {
+                        MouseScrollDelta::LineDelta(_, y) => y > 0.0,
+                        MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
+                    } {
+                        if view.size.1 < 960 {
+                            view.size = (view.size.0 + w_step, view.size.1 + h_step);
+                            view.position = (
+                                view.position.0 - w_step as i32 / 2,
+                                view.position.1 - h_step as i32,
+                            );
+                        }
+                    } else {
+                        let visible_y =
+                            window.current_monitor().unwrap().size().height as i32 - 200;
+                        if view.size.0 > 200 && window.outer_position().unwrap().y < visible_y {
+                            view.size = (view.size.0 - w_step, view.size.1 - h_step);
+                            view.position = (
+                                view.position.0 + w_step as i32 / 2,
+                                view.position.1 + h_step as i32,
+                            );
                         }
                     }
-                    last_mouse_wheel = Instant::now();
+                    window.set_outer_position(PhysicalPosition::new(
+                        view.position.0,
+                        view.position.1,
+                    ));
+                    fb.resize_viewport(view.size.0, view.size.1);
+                    window.set_inner_size(PhysicalSize::new(view.size.0, view.size.1));
+                    window.request_redraw();
+                    last_zoom_event = Instant::now();
                 }
             }
 
@@ -336,7 +332,12 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
         }
 
         if redraw {
-            context.window().set_visible(true);
+            if first_loop {
+                window.set_inner_size(PhysicalSize::new(view.size.0, view.size.1));
+                window.set_outer_position(PhysicalPosition::new(view.position.0, view.position.1));
+                context.window().set_visible(true);
+                first_loop = false;
+            }
             fb.redraw();
             context.swap_buffers().unwrap();
         }
