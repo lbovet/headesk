@@ -17,7 +17,7 @@ Headesk displays your webcam video on the desktop. Ideal for remote presentation
 ### Background Removal
 
 * Use a virtual camera like [XSplit VCam](https://www.xsplit.com/vcam) or equivalent.
-* Automatic chroma key detection with a green screen (experimental).
+* Automatic chroma key detection with a green screen.
 
 ## Install
 
