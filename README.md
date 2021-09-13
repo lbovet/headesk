@@ -22,8 +22,10 @@ Headesk displays your webcam video on the desktop. Ideal for remote presentation
 ## Install
 
 * Windows: [Download](https://github.com/lbovet/headesk/releases) and unzip.
-* Linux: _please help me to provide .rpm and .deb builds_.
-* Mac OS: _ain't no mac, please gimme one to build and test_.
+* Linux: [Download](https://github.com/lbovet/headesk/releases)
+  - Requires `libopencv`
+  - _Please help me to provide .rpm and .deb builds_.
+* Mac OS: _Ain't no mac, please gimme one to build and test_.
 
 ## Build
 _Instructions for developers_
