@@ -10,8 +10,8 @@ Headesk displays your webcam video on the desktop. Ideal for remote presentation
 
 * **Move Window**: `Left Click` and drag.
 * **Resize Window**: `Mousewheel`.
-* **Zoom Content**: `Ctrl + Mousewheel`.
-* **Move Content**: `Ctrl + Left Click` and drag.
+* **Zoom Content**: `Shift + Mousewheel`.
+* **Move Content**: `Shift + Left Click` and drag.
 * **Change Camera**: `Right Click`.
 
 ### Background Removal

@@ -130,7 +130,7 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
 
     let mut last_frame_instant = Instant::now();
 
-    let mut is_ctrl = false;
+    let mut is_shift = false;
     let mut left_pressed = false;
     let mut mouse_pos: Option<PhysicalPosition<f64>> = None;
     let mut drag_start: Option<PhysicalPosition<f64>> = None;
@@ -186,8 +186,8 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
                 event: WindowEvent::ModifiersChanged(state),
                 ..
             } => {
-                is_ctrl = state.ctrl();
-                chromakey.set_highlight(state.ctrl());
+                is_shift = state.shift();
+                chromakey.set_highlight(state.shift());
             }
             Event::WindowEvent {
                 event: WindowEvent::Moved(position),
@@ -203,7 +203,7 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
                 ..
             } => {
                 if button == MouseButton::Left && state == ElementState::Pressed {
-                    if is_ctrl {
+                    if is_shift {
                         if let Some(position) = mouse_pos {
                             drag_start = Some(position);
                         }
@@ -229,7 +229,7 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
                 event: WindowEvent::CursorMoved { position, .. },
                 ..
             } => {
-                if is_ctrl && left_pressed {
+                if is_shift && left_pressed {
                     if let Some(start) = drag_start {
                         let rel_dx = (position.x - start.x) / window.inner_size().width as f64;
                         let rel_dy = -(position.y - start.y) / window.inner_size().height as f64;
@@ -263,7 +263,7 @@ pub fn create<F: 'static + FnMut(View) -> ()>(
                 event: WindowEvent::MouseWheel { delta, .. },
                 ..
             } => {
-                if is_ctrl {
+                if is_shift {
                     let mut increment: f32 = if match delta {
                         MouseScrollDelta::LineDelta(_, y) => y > 0.0,
                         MouseScrollDelta::PixelDelta(pos) => pos.y > 0.0,
